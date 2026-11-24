@@ -1,0 +1,29 @@
+{
+  "name": "stickerwave",
+  "version": "1.0.0",
+  "description": "Stickerwave — Desktop Studio UI untuk membuat & mengirim WhatsApp Native Audio Sticker langsung ke chat pribadi",
+  "type": "module",
+  "main": "src/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LecyLecy/stickerwave.git"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test tests/*.test.js",
+    "test:proto": "node --test tests/proto-audio-sticker.test.js",
+    "test:media": "node --test tests/media-converter.test.js",
+    "test:server": "node --test tests/desktop-server.test.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "7.0.0-rc14",
+    "dotenv": "^16.4.7",
+    "ffmpeg-static": "^5.2.0",
+    "ffprobe-static": "^3.1.0",
+    "pino": "^9.6.0",
+    "qrcode": "^1.5.4"
+  }
+}

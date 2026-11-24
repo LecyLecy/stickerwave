@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# WhatsApp auth & session credentials (NEVER commit)
+auth/
+auth_info*/
+*.creds.json
+
+# Environment variables
+.env
+.env.local
+
+# Temporary files & generated outputs
+temp/
+tmp/
+*.log
+*.zip
+
+# OS & editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

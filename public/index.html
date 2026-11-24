@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Stickerwave — WhatsApp Audio Sticker Studio</title>
+  <link rel="icon" type="image/png" href="/logo.png" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <!-- ==================== FIRST-TIME / UNLINKED CONNECT GATE ==================== -->
+  <section class="connect-gate" id="connectGate">
+    <div class="connect-card">
+      <div class="connect-brand">
+        <img src="/logo.png" alt="Stickerwave Logo" class="connect-logo" />
+        <h1>Stickerwave</h1>
+        <p>Buat stiker gambar &amp; video bersuara langsung ke chat pribadi WhatsApp</p>
+      </div>
+
+      <div class="connect-status-pill" id="connectStatusPill">
+        <span class="status-dot connecting" id="connectStatusDot"></span>
+        <span id="connectStatusText">Menyambungkan ke WhatsApp...</span>
+      </div>
+
+      <!-- Loading / Connecting state -->
+      <div class="connect-loading" id="connectLoadingBox">
+        <div class="big-spinner"></div>
+        <p id="connectLoadingMsg">Menyiapkan sesi &amp; QR Code WhatsApp...</p>
+      </div>
+
+      <!-- QR Code Login Panel -->
+      <div class="connect-qr-panel hidden" id="connectQrPanel">
+        <div class="qr-frame">
+          <img id="connectQrImg" alt="WhatsApp QR Code" />
+        </div>
+
+        <ol class="connect-steps">
+          <li>Buka <strong>WhatsApp</strong> di HP Anda</li>
+          <li>Masuk ke <strong>Perangkat Tertaut &rarr; Tautkan Perangkat</strong></li>
+          <li>Arahkan kamera ke QR Code di atas</li>
+        </ol>
+
+        <div class="pair-divider"><span>atau tautkan dengan nomor HP</span></div>
+
+        <form id="pairForm" class="pair-form">
+          <input
+            type="text"
+            id="pairPhoneInput"
+            class="text-input"
+            placeholder="Contoh: 6281234567890"
+            autocomplete="off"
+          />
+          <button type="submit" class="btn-secondary">Minta Kode</button>
+        </form>
+        <div class="pair-code-box hidden" id="pairCodeBox"></div>
+      </div>
+
+      <p class="connect-footnote">
+        Editor stiker akan terbuka otomatis begitu WhatsApp Anda berhasil terhubung.
+      </p>
+    </div>
+  </section>
+
+  <!-- ==================== MAIN STUDIO EDITOR (SHOWN ONLY WHEN CONNECTED) ==================== -->
+  <div class="app-shell hidden" id="studioApp">
+    <!-- Top Header -->
+    <header class="topbar">
+      <div class="brand">
+        <img src="/logo.png" alt="Stickerwave Logo" class="brand-logo" />
+        <div>
+          <h1>Stickerwave</h1>
+          <p class="brand-sub">Buat stiker gambar/video bersuara langsung ke chat pribadi WhatsApp</p>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <div class="pill-info" id="maxDurationBadge">Maks durasi: 10d</div>
+        <div class="wa-status-pill" id="waStatusPill" title="Status koneksi WhatsApp">
+          <span class="status-dot connected" id="waStatusDot"></span>
+          <span id="waStatusText">WhatsApp Terhubung</span>
+        </div>
+        <button type="button" class="btn-logout" id="logoutBtn" title="Putuskan koneksi WhatsApp &amp; kembali ke QR">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          <span>Logout</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Studio Body -->
+    <main class="studio-main">
+      <!-- Center Stage: Preview & Crop -->
+      <section class="stage-panel">
+        <div class="stage-header">
+          <div class="stage-title-group">
+            <span class="section-label">Preview Stiker 1:1</span>
+            <span class="media-badge hidden" id="visualTypeBadge">VIDEO</span>
+            <span class="file-meta hidden" id="visualMetaText"></span>
+          </div>
+          <div class="stage-actions hidden" id="visualActions">
+            <button type="button" class="btn-ghost btn-sm" id="replaceVisualBtn">Ganti Visual</button>
+            <button type="button" class="btn-danger-ghost btn-sm" id="removeVisualBtn">Hapus</button>
+          </div>
+        </div>
+
+        <!-- Empty Dropzone -->
+        <div class="dropzone" id="visualDropzone" tabindex="0" role="button" aria-label="Pilih 1 gambar atau 1 video">
+          <div class="dropzone-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="3"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+          </div>
+          <h2>Pilih 1 Gambar atau 1 Video</h2>
+          <p>Tarik file ke sini atau klik untuk memilih.<br/>Hanya bisa pilih <strong>1 visual</strong> (gambar <em>atau</em> video).</p>
+          <span class="btn-secondary">Pilih Gambar / Video</span>
+          <span class="dropzone-hint">Mendukung JPG, PNG, WebP, GIF, MP4, MOV, WebM</span>
+        </div>
+
+        <!-- Loaded Square Preview Canvas -->
+        <div class="preview-workspace hidden" id="previewWorkspace">
+          <div class="sticker-frame-wrap">
+            <div class="sticker-frame" id="stickerFrame" title="Geser untuk mengatur posisi crop 1:1">
+              <img id="previewImage" class="preview-media hidden" alt="Preview gambar stiker" draggable="false" />
+              <video id="previewVideo" class="preview-media hidden" playsinline preload="auto"></video>
+              <div class="crop-grid" id="cropGrid" aria-hidden="true">
+                <span></span><span></span><span></span><span></span>
+              </div>
+              <div class="crop-drag-hint" id="cropDragHint">Geser untuk atur crop 1:1</div>
+              <div class="speaker-preview-badge hidden" id="speakerPreviewBadge" title="Stiker ini akan memiliki ikon suara di WhatsApp">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Playback & Audio Status Bar -->
+          <div class="transport-bar">
+            <div class="transport-left">
+              <button type="button" class="btn-play" id="playPauseBtn" title="Putar / Jeda (Spasi)">
+                <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+                <svg id="pauseIcon" class="hidden" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+              </button>
+              <button type="button" class="btn-toggle active" id="loopBtn" title="Ulangi otomatis">Loop</button>
+              <span class="time-readout" id="previewTimeReadout">0.0d / 0.0d</span>
+            </div>
+            <div class="audio-mode-pill" id="audioModePill">Tanpa suara</div>
+          </div>
+
+          <!-- Crop Presets -->
+          <div class="crop-controls">
+            <span class="crop-label">Crop:</span>
+            <div class="crop-presets" id="cropPresets">
+              <button type="button" class="chip active" data-crop="center">1:1 Tengah</button>
+              <button type="button" class="chip" data-crop="top">Atas</button>
+              <button type="button" class="chip" data-crop="bottom">Bawah</button>
+              <button type="button" class="chip" data-crop="left">Kiri</button>
+              <button type="button" class="chip" data-crop="right">Kanan</button>
+              <button type="button" class="chip" data-crop="none">Utuh (Full)</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Sidebar: Sticker Metadata, Optional Audio & Send -->
+      <aside class="sidebar-panel">
+        <!-- 1. Sticker Name (Required) -->
+        <div class="card">
+          <div class="card-header">
+            <label for="stickerNameInput" class="card-title">Nama Stiker <span class="required-star">*</span></label>
+            <span class="char-count" id="nameCharCount">0/80</span>
+          </div>
+          <input
+            type="text"
+            id="stickerNameInput"
+            class="text-input"
+            maxlength="80"
+            placeholder="Contoh: Ngakak Banget, Wkwk..."
+            autocomplete="off"
+          />
+          <div class="watermark-preview">
+            <span class="wm-label">Watermark Stiker:</span>
+            <div class="wm-value">
+              <strong id="wmPackPreview">Nama stiker belum diisi</strong>
+              <span class="wm-dot">&bull;</span>
+              <span class="wm-author" id="wmAuthorPreview">Adin</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Optional Custom Audio -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Audio Kustom <span class="optional-tag">Opsional</span></span>
+            <button type="button" class="btn-danger-ghost btn-xs hidden" id="removeAudioBtn">Hapus Audio</button>
+          </div>
+          <p class="card-desc">
+            Jika diisi, <strong>audio asli video otomatis di-mute</strong> dan diganti audio ini.
+          </p>
+
+          <div class="audio-dropzone" id="audioDropzone" tabindex="0" role="button" aria-label="Pilih file audio opsional">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="22"></line>
+            </svg>
+            <span>Pilih / tarik file audio (MP3, WAV, OGG, M4A)</span>
+          </div>
+
+          <div class="audio-file-card hidden" id="audioFileCard">
+            <div class="audio-file-info">
+              <strong id="audioFileName">audio.mp3</strong>
+              <span id="audioFileMeta">0.0 detik</span>
+            </div>
+            <button type="button" class="btn-ghost btn-xs" id="replaceAudioBtn">Ganti</button>
+          </div>
+          <div class="override-banner hidden" id="audioOverrideBanner">
+            Audio asli video di-mute. Durasi audio mengikuti panjang potongan video.
+          </div>
+        </div>
+
+        <!-- 3. Video Quality (only relevant for video) -->
+        <div class="card hidden" id="videoOptionsCard">
+          <div class="card-header">
+            <span class="card-title">Pengaturan Video</span>
+          </div>
+          <div class="option-row">
+            <label for="fpsSelect">Frame Rate (FPS)</label>
+            <select id="fpsSelect" class="select-input">
+              <option value="10">10 FPS (Ringan)</option>
+              <option value="12" selected>12 FPS (Standar)</option>
+              <option value="15">15 FPS (Halus)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 4. Send CTA -->
+        <div class="send-box">
+          <button type="button" class="btn-send" id="sendBtn" disabled>
+            <span class="spinner hidden" id="sendSpinner"></span>
+            <span id="sendBtnText">Kirim ke Chat Pribadi</span>
+          </button>
+          <p class="send-hint" id="sendHint">Pilih gambar atau video terlebih dahulu.</p>
+          <div class="last-sent-box hidden" id="lastSentBox"></div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Bottom CapCut-Style Timeline Dock -->
+    <section class="timeline-dock" id="timelineDock">
+      <div class="timeline-dock-header">
+        <div class="dock-title">
+          <span class="section-label">Timeline Editor</span>
+          <span class="dock-tip" id="timelineTip">Pilih video atau audio untuk mulai menggeser potongan frame.</span>
+        </div>
+        <div class="dock-summary" id="timelineSummary"></div>
+      </div>
+
+      <!-- Empty state when no video and no audio -->
+      <div class="timeline-empty" id="timelineEmpty">
+        Tambahkan <strong>Video</strong> untuk memotong frame seperti CapCut, atau tambahkan <strong>Audio</strong> untuk memilih titik mulai suara.
+      </div>
+
+      <!-- Video Track -->
+      <div class="track-block hidden" id="videoTrackBlock">
+        <div class="track-header">
+          <div class="track-label video-label">
+            <span class="track-dot"></span>
+            <strong>Video</strong>
+            <span class="track-range-text" id="videoRangeText">0.0d &rarr; 3.0d</span>
+          </div>
+          <div class="track-stats">
+            <span class="stat-pill" id="videoDurPill">Durasi: 3.0d / maks 10d</span>
+          </div>
+        </div>
+
+        <div class="timeline-ruler" id="videoRuler"></div>
+
+        <div class="track-lane video-lane" id="videoLane">
+          <canvas class="filmstrip-canvas" id="videoFilmstrip"></canvas>
+          <div class="shade-left" id="videoShadeLeft"></div>
+          <div class="shade-right" id="videoShadeRight"></div>
+
+          <div class="selection-window video-selection" id="videoSelection">
+            <div class="trim-handle handle-left" id="videoHandleLeft" title="Geser titik mulai video">
+              <span class="handle-grip"></span>
+            </div>
+            <div class="selection-body" id="videoSelectionBody" title="Geser seluruh potongan video">
+              <span class="selection-badge" id="videoSelectionBadge">3.0d</span>
+            </div>
+            <div class="trim-handle handle-right" id="videoHandleRight" title="Geser titik akhir video">
+              <span class="handle-grip"></span>
+            </div>
+          </div>
+
+          <div class="playhead hidden" id="videoPlayhead"></div>
+        </div>
+      </div>
+
+      <!-- Audio Track -->
+      <div class="track-block hidden" id="audioTrackBlock">
+        <div class="track-header">
+          <div class="track-label audio-label">
+            <span class="track-dot"></span>
+            <strong>Audio Kustom</strong>
+            <span class="track-range-text" id="audioRangeText">0.0d &rarr; 3.0d</span>
+          </div>
+          <div class="track-stats">
+            <span class="stat-pill audio-lock-pill" id="audioModeBadge">Geser awalan saja (durasi ikut video)</span>
+          </div>
+        </div>
+
+        <div class="timeline-ruler" id="audioRuler"></div>
+
+        <div class="track-lane audio-lane" id="audioLane">
+          <canvas class="waveform-canvas" id="audioWaveform"></canvas>
+          <div class="shade-left" id="audioShadeLeft"></div>
+          <div class="shade-right" id="audioShadeRight"></div>
+
+          <div class="selection-window audio-selection" id="audioSelection">
+            <div class="trim-handle handle-left" id="audioHandleLeft" title="Geser titik mulai audio">
+              <span class="handle-grip"></span>
+            </div>
+            <div class="selection-body" id="audioSelectionBody" title="Geser titik mulai audio">
+              <span class="selection-badge" id="audioSelectionBadge">0.0d &rarr; 3.0d</span>
+            </div>
+            <div class="trim-handle handle-right" id="audioHandleRight" title="Durasi mengikuti video">
+              <span class="handle-grip" id="audioRightGrip"></span>
+              <span class="lock-icon hidden" id="audioRightLock" aria-hidden="true">&#128274;</span>
+            </div>
+          </div>
+
+          <div class="playhead hidden" id="audioPlayhead"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Hidden File Inputs -->
+  <input type="file" id="visualFileInput" accept="image/*,video/*" class="hidden" />
+  <input type="file" id="audioFileInput" accept="audio/*,video/*" class="hidden" />
+  <audio id="previewAudio" preload="auto" class="hidden"></audio>
+
+  <!-- Logout Confirmation Modal -->
+  <div class="modal-backdrop hidden" id="logoutModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Putuskan Koneksi WhatsApp?</h3>
+        <button type="button" class="btn-icon-close" id="closeLogoutModalBtn" aria-label="Tutup">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="logout-desc">
+          Akun WhatsApp Anda akan di-unlink dari <strong>Stickerwave</strong> dan sesi lokal akan dihapus.
+          Anda perlu scan QR Code lagi untuk masuk kembali.
+        </p>
+        <div class="modal-actions">
+          <button type="button" class="btn-ghost" id="cancelLogoutBtn">Batal</button>
+          <button type="button" class="btn-danger" id="confirmLogoutBtn">Ya, Putuskan &amp; Logout</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
